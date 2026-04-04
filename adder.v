@@ -20,11 +20,10 @@
 //////////////////////////////////////////////////////////////////////////////////
 module adder(
     input X_in,
-    input Y_in, 
-    input [3:0]c_en, 
-    input c_in ,
+    input Y_in,
+    input c_in,
     output result_out,
     output carry);
 assign result_out= (X_in^Y_in)^c_in;
-assign carry= (X_in&Y_in&(~c_en[0]))|((~c_en[0])&(~c_en[1])&(~c_en[3]));
+assign carry= (X_in&Y_in)|(Y_in&c_in)|(X_in&c_in);
 endmodule

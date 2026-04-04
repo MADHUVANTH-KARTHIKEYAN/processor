@@ -26,13 +26,10 @@ module imm_calc(
 );
 always@(*)
 begin
+imm_out={16'b0,imm_in};
 if(m1_in)
-begin
-    imm_out[31:0]={imm_in,16'b0};
-end
+    imm_out={imm_in,16'b0};
 else if(m2_in && imm_in[15])
-    imm_out={16'b1,imm_in};
-else
-    imm_out={16'b0,imm_in};
+    imm_out={16'hFFFF,imm_in};
 end
 endmodule

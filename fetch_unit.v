@@ -25,6 +25,7 @@ module fetch_unit(
     input [3:0]operate,
     input clk_in,
     input rst,
+    input pc_en,
     output [31:0]pc_out,
     output [31:0]inst_out
 );
@@ -33,6 +34,7 @@ program_counter sb1(
     .clk(clk_in),
     .isbranchTaken(isbranchTaken),
     .rst(rst),
+    .pc_en(pc_en),
     .address_out(pc_out)
 );
 wire [31:0] pc;
