@@ -1,28 +1,30 @@
 module regfile(
-    //Read register
-    input [3:0]rs_1_in,//Source register 1
-    input [3:0]rs_2_in,//Source register 2
-    input [3:0]write_address,
-    input isw,
-    input rstreg,
-    input [31:0]data,
-    output reg [31:0]op_1,
-    output reg [31:0]op_2
+input clk,
+input [3:0] rs_1_in,// source address1
+input [3:0] rs_2_in,// source address2
+input [3:0] write_address,
+input isw,
+input rstreg,
+input [31:0] data,// data to write 
+output reg [31:0] op_1,
+output reg [31:0] op_2
 );
-assign w_en=0;
-integer i;
-reg[31:0] file[14:0];
+reg [31:0] file[15:0];// 16-register of 32 bit size
+genvar j;
+generate
+for(j=0;j<16;j=j+1) begin : RESET
+always@(posedge clk)
+begin
+if(rstreg)
+file[j]<=32'b0;
+else if(isw && (write_address==j))
+file[j]<=data;
+end
+end
+endgenerate
 always@(*)
-if(~rstreg)
-    if(w_en==0)
-    begin
-    op_1<=file[rs_1_in];
-    op_2<=file[rs_2_in];
-    end
-    else
-    file[write_address]=data;
-else
-    for(i=0; i<15;i=i+1)
-    file[i]<=32'b0;
+begin
+op_1=file[rs_1_in];
+op_2=file[rs_2_in];
+end
 endmodule
-

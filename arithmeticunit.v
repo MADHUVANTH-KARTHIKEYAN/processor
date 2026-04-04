@@ -4,7 +4,6 @@ module arithmeticunit(
     input csel,
     input [3:0]s,
     input lsr,
-    input lsl,
     output c_out,
     output result
 );
@@ -13,7 +12,7 @@ mux h1(
     .in1(A_in),
     .in2(~A_in),
     .in3(lsr),
-    .in4(lsl),
+    .in4(1'b0),
     .sel1(s[3]),
     .sel2(s[2]),
     .res_out(result1)
@@ -21,11 +20,11 @@ mux h1(
 mux h2(
     .in1((~B_in)|A_in),
     .in2(B_in),
-    .in3(B_in|(~A_in)),
-    .in4(0),
+    .in3(B_in),
+    .in4(1'b0),
     .sel1(s[1]),
     .sel2(s[0]),
     .res_out(result2)
 );
-adder f1(result1,result2, s, csel ,result,c_out);
+adder f1(result1,result2,csel,result,c_out);
 endmodule

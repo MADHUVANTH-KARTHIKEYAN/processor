@@ -35,6 +35,7 @@ begin
     5'b01000:begin control_word<={instr_in[26], 6'b000001,6'b000110}; iswrite<=1'b1; end //ld, if ibit is 1 then it offsets the address
     5'b01010:begin control_word<={instr_in[26], 6'b0,1'b1,5'b00110}; iswrite<=1'b0; end//st
     5'b01001:begin control_word<={instr_in[26], 7'b0,5'b00010}; iswrite<=1'b0; end//cmp
+    5'b00110:begin control_word<={instr_in[26], 7'b0,5'b11100}; iswrite<=1'b1; end//mov
     default:begin control_word<={instr_in[26], 7'b0,instr_in[31:27]}; iswrite<=1'b1; end//ALU calculations
     //Add-00010, Sub-01011, LSR-10110, LSL-11110, OR-00001, AND-00101, NOT-01110, MOV-00110 --- OPCODES
     //ALUsignal 5 bit, 4bit MSB describes operation, 1 bit represents carry select, and last bit lsb or control represents wb

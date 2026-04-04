@@ -16,8 +16,8 @@
 // Revision 0.01 - File Created
 // Revision 0.02 - Modules instantiated
 // Revision 0.03 - Modules input and outputs were optimized
+// Revision 0.04 - Multi-cycle controller added
 // Additional Comments: This processor will take custom instructions in instruction memory. For now its decided by 4bit switch to run different programs.
-// Debug: Check for muxes, if any special muxes there.
 //////////////////////////////////////////////////////////////////////////////////
 module processor_top(
     input [3:0]process_input,
@@ -37,16 +37,55 @@ wire [3:0]rd_out;
 wire [31:0]op1;
 wire [31:0]op2;
 wire [31:0]immx;
+wire [3:0] rs1;
+wire [3:0] rs2;
+wire [31:0] wb_data;
+wire [3:0] wb_addr;
+wire iswriteback;
+reg [1:0] state;
+reg wb_en;
+reg pc_en;
+always@(posedge clk)
+begin
+if(rst_in)
+begin
+state<=2'd0;
+wb_en<=1'b0;
+pc_en<=1'b0;
+end
+else
+begin
+case(state)
+2'd0: begin wb_en<=1'b0; pc_en<=1'b0; state<=2'd1; end
+2'd1: begin wb_en<=1'b0; pc_en<=1'b0; state<=2'd2; end
+2'd2: begin wb_en<=1'b1; pc_en<=1'b1; state<=2'd0; end
+default: state<=2'd0;
+endcase
+end
+end
+wire gated_iswrite;
+assign gated_iswrite=iswriteback & wb_en;
+regfile u0(
+    .clk(clk),
+    .rs_1_in(rs1),
+    .rs_2_in(rs2),
+    .write_address(wb_addr),
+    .isw(gated_iswrite),
+    .rstreg(rst_in),
+    .data(wb_data),
+    .op_1(op1),
+    .op_2(op2)
+);
 fetch_unit u1(                         //Instruction memory is read, PC increments by 4 bytes, and a mux for branch signals
     .branchinfo_in(branch),      //Here we don't go in normal order, we follow jumps for constructs like if,for
-    .isbranchTaken(isbranchTaken),
+    .isbranchTaken(isbranchTaken & pc_en),
     .operate(process_input),
     .clk_in(clk),
     .rst(rst_in),
+    .pc_en(pc_en),
     .pc_out(PC),
     .inst_out(instruction)     //Instruction is read from memory and given to instruction buffer register
 );
-
 execute_unit u2(
     .instr_in(instruction),        //Instruction is input, get ra(15),rs1, rd(store the value), rs2 registers through mux in unit
     .control_in(control),
@@ -54,22 +93,20 @@ execute_unit u2(
     .PC(PC),
     .rd_out(rd_out),
     .rst(rst_in),
-    .op1_out(op1),             //First operand 
-    .op2_out(op2),            //Second operand
+    .rs1_out(rs1),
+    .rs2_out(rs2),           //Second operand
     .immx_out(immx),     //Takes 16 bit registers, like mov r1,15 here 15 is the immediate value
     .branchInfo(branch),//Signals that goes in branch unit as an input
     .isbranchTaken(isbranchTaken)
 );
 ALU_design u4(
     .op1_in(op1),                   //Operand 1 is taken for execution
-    .clk(clk),
     .op2_in(op2),                   //Operand 2 is taken in for execution
-    .immx(immx),                 //Operand 2 can also be an immediate value or integer(normally specified in little endian format in storage)
+    .immx(immx),                 //Operand 2 can also be an immediate value or integer
     .control_in(control),
     .res_out(aluResult),      //The result of calculation is sent as a signal
-    .flags(flags)          //ALU sends the values like zero, overflow, carry and all, need to confirm on unit of flag
+    .flags(flags)          //ALU sends the values like zero, overflow, carry and all
 );
-
 memory_unit u5(
     .alu_resultin(aluResult),
     .op(op2),
@@ -77,8 +114,6 @@ memory_unit u5(
     .clk_in(clk),
     .Idresult(ldResult)
 );
-
-wire iswriteback;
 control_unit u7(
     .instr_in(instruction),
     .iswrite(iswriteback),
@@ -88,9 +123,16 @@ writeback u6(
     .aluResult_in(aluResult),
     .ldResult_in(ldResult),
     .pc_in(PC),
-    .rstwrite(rst_in),
     .control_in(control),
-    .w_en(iswriteback),
-    .rd_in(rd_out)                     //Store register value, we have to declare this assignments again in this file
+    .rd_in(rd_out),
+    .wb_data(wb_data),
+    .wb_addr(wb_addr)
 );
+always@(posedge clk)
+begin
+if(rst_in)
+result_out<=32'b0;
+else if(wb_en & iswriteback)
+result_out<=wb_data;
+end
 endmodule

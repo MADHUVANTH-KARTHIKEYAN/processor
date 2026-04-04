@@ -25,19 +25,19 @@ module program_counter(
     input clk,
     input isbranchTaken,
     input rst,
+    input pc_en,
     output reg [31:0]address_out
 
     );
 reg [31:0]pc=32'b0;
 always@(posedge clk)
 begin
-if(isbranchTaken)
+if(rst)
+pc<=32'b0;
+else if(isbranchTaken)
 pc<=address_in;
-else if(rst)
-pc<=31'b0;
-else
+else if(pc_en)
 pc <= pc+1'b1;
 address_out<=pc;
 end
 endmodule
-
