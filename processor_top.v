@@ -3,10 +3,10 @@
 // Author: Pulkit Raj
 // Author2: Madhuvanth G.K
 // Create Date: 25.01.2026 23:24:43
-// Design Name: Processor fetch
+// Design Name: Processor Top
 // Module Name: 
-// Project Name: SimpleRisc Architecture
-// Target Devices: Arty Z7
+// Project Name: 32 bit Processor Design
+// Target Devices
 // Tool Versions: 
 // Description: 
 // 
@@ -49,18 +49,8 @@ always@(posedge clk)
 begin
 if(rst_in)
 begin
-state<=2'd0;
 wb_en<=1'b0;
 pc_en<=1'b0;
-end
-else
-begin
-case(state)
-2'd0: begin wb_en<=1'b0; pc_en<=1'b0; state<=2'd1; end
-2'd1: begin wb_en<=1'b0; pc_en<=1'b0; state<=2'd2; end
-2'd2: begin wb_en<=1'b1; pc_en<=1'b1; state<=2'd0; end
-default: state<=2'd0;
-endcase
 end
 end
 wire gated_iswrite;
@@ -86,7 +76,7 @@ fetch_unit u1(                         //Instruction memory is read, PC incremen
     .pc_out(PC),
     .inst_out(instruction)     //Instruction is read from memory and given to instruction buffer register
 );
-execute_unit u2(
+decode_unit u2(
     .instr_in(instruction),        //Instruction is input, get ra(15),rs1, rd(store the value), rs2 registers through mux in unit
     .control_in(control),
     .flags(flags),
