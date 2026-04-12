@@ -24,7 +24,13 @@ module control_unit(
     output reg [12:0] control_word,
     output reg iswrite
 );
-always@(instr_in[31:27])
+always@(*)
+begin
+if(instr_in == 32'b0)begin
+control_word = 13'b0;
+iswrite = 1'b0;
+end
+else
 begin
     case(instr_in[31:27])
     5'b10010:begin control_word<={instr_in[26], 1'b1,12'b0}; iswrite<=1'b0; end//Ubranch
@@ -36,9 +42,13 @@ begin
     5'b01010:begin control_word<={instr_in[26], 6'b0,1'b1,5'b00110}; iswrite<=1'b0; end//st
     5'b01001:begin control_word<={instr_in[26], 7'b0,5'b00010}; iswrite<=1'b0; end//cmp
     5'b00110:begin control_word<={instr_in[26], 7'b0,5'b11100}; iswrite<=1'b1; end//mov
-    default:begin control_word<={instr_in[26], 7'b0,instr_in[31:27]}; iswrite<=1'b1; end//ALU calculations
+    default:begin 
+    control_word<={instr_in[26], 7'b0,instr_in[31:27]}; 
+    iswrite<=1'b1;
+     end//ALU calculations
     //Add-00010, Sub-01011, LSR-10110, LSL-11110, OR-00001, AND-00101, NOT-01110, MOV-00110 --- OPCODES
     //ALUsignal 5 bit, 4bit MSB describes operation, 1 bit represents carry select, and last bit lsb or control represents wb
-    endcase // Control word={ibit, Ubranch, Bgt, Beq, Call, Ret, Ld, St, ALU Op, Writeback} 
+    endcase 
+end// Control word={ibit, Ubranch, Bgt, Beq, Call, Ret, Ld, St, ALU Op, Writeback} 
 end
 endmodule
