@@ -3,10 +3,10 @@
 // Author: Pulkit Raj
 // Author2: Madhuvanth G.K
 // Create Date: 25.01.2026 23:24:43
-// Design Name: Processor Top
+// Design Name: Processor fetch
 // Module Name: 
-// Project Name: 32 bit Processor Design
-// Target Devices
+// Project Name: SimpleRisc Architecture
+// Target Devices: Arty Z7
 // Tool Versions: 
 // Description: 
 // 
@@ -43,18 +43,39 @@ wire [31:0] wb_data;
 wire [3:0] wb_addr;
 wire iswriteback;
 reg [1:0] state;
+reg [31:0] instr_reg;
 reg wb_en;
 reg pc_en;
 always@(posedge clk)
 begin
 if(rst_in)
 begin
+state<=2'd0;
 wb_en<=1'b0;
 pc_en<=1'b0;
+end
+else
+begin
+case(state)
+2'd0: begin wb_en<=1'b0; pc_en<=1'b0; state<=2'd1; end
+2'd1: begin wb_en<=1'b0; pc_en<=1'b0; state<=2'd2; end
+2'd2: begin wb_en<=1'b1; pc_en<=1'b1; state<=2'd0; end
+default: state<=2'd0;
+endcase
 end
 end
 wire gated_iswrite;
 assign gated_iswrite=iswriteback & wb_en;
+
+always @(posedge clk)
+begin
+    if (rst_in)
+        instr_reg <= 32'b0;
+    else if (state == 2'd0)   // fetch stage
+        instr_reg <= instruction;
+end
+
+
 regfile u0(
     .clk(clk),
     .rs_1_in(rs1),
@@ -76,8 +97,8 @@ fetch_unit u1(                         //Instruction memory is read, PC incremen
     .pc_out(PC),
     .inst_out(instruction)     //Instruction is read from memory and given to instruction buffer register
 );
-decode_unit u2(
-    .instr_in(instruction),        //Instruction is input, get ra(15),rs1, rd(store the value), rs2 registers through mux in unit
+execute_unit u2(
+    .instr_in(instr_reg),        //Instruction is input, get ra(15),rs1, rd(store the value), rs2 registers through mux in unit
     .control_in(control),
     .flags(flags),
     .PC(PC),
@@ -105,7 +126,7 @@ memory_unit u5(
     .Idresult(ldResult)
 );
 control_unit u7(
-    .instr_in(instruction),
+    .instr_in(instr_reg),
     .iswrite(iswriteback),
     .control_word(control)
 );
@@ -125,4 +146,4 @@ result_out<=32'b0;
 else if(wb_en & iswriteback)
 result_out<=wb_data;
 end
-endmodule
+endmodule  

@@ -25,21 +25,19 @@ module instruction_memory(
     input clk,
     output reg [31:0] instruction_out
 );
-reg [31:0]addin;
-always@(posedge clk)
-begin
-addin<=pc_in;
-end
 
-always@(addin, process_input_in)
+wire [31:0] addin;
+assign addin = pc_in;
+
+always@(*)
 begin
 instruction_out=32'b0;
 if(process_input_in==4'b0001)
 begin
 case(addin)
-0: instruction_out= 32'b00110_1_0011_1010_00_0000101101001101;
-1: instruction_out= 32'b00110_1_0110_1011_00_0000010101010001;
-2: instruction_out= 32'b00010_0_1010_0011_0110_00000000000000;
+0: instruction_out= 32'b10110_1_0011_0000_00_0000000000000110; 
+
+
 default: instruction_out= 32'b0;
 endcase
 end
